@@ -68,4 +68,44 @@ plt.show()
 ####### B 작업자 작업 수행 #######
 
 ''' 코드 작성 바랍니다 '''
+from xgboost import XGBClassifier
 
+param_grid = {
+    'max_depth': [3, 5, 7, 9, 15],
+    'learning_rate': [0.1, 0.01, 0.001],
+    'n_estimators': [50, 100, 200, 300],
+}
+
+xgb = XGBClassifier(
+    objective='multi:softmax',
+    eval_metric='mlogloss',
+    use_label_encoder=False,
+)
+
+grid_search = GridSearchCV(
+    xgb,
+    param_grid,
+    cv=5,
+    scoring='accuracy',
+    n_jobs=-1
+)
+
+grid_search.fit(X_train, y_train)
+best_xgb = grid_search.best_estimator_
+
+print("최적 하이퍼파라미터:", grid_search.best_params_)
+print("최적 모델 정확도(Train CV 기준):", grid_search.best_score_)
+print("테스트 정확도:", best_xgb.score(X_test, y_test))
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+importances = best_xgb.feature_importances_
+feature_names = X.columns
+
+plt.figure(figsize=(10,5))
+plt.barh(feature_names, importances)
+plt.xlabel("Feature Importance")
+plt.ylabel("Feature")
+plt.title("XGBoost Feature Importance")
+plt.show()
